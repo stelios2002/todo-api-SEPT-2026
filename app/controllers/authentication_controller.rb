@@ -1,6 +1,8 @@
 # Login if user exists and the password is correct (email + password).
 # Logout is just a message not a state, this mock server doesn't keep active sessions.
 class AuthenticationController < ApplicationController
+  before_action :authorize_request, only: [:me]
+
   def login
     user = User.find_by(email: params[:email]&.downcase)
 
@@ -21,8 +23,6 @@ class AuthenticationController < ApplicationController
   end
 
   def me
-    return unless authorize_request
-
     render json: { user: { id: current_user.id, name: current_user.name, email: current_user.email } }, status: :ok
   end
 end
