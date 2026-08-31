@@ -2,6 +2,8 @@
 class ApplicationController < ActionController::API
   attr_reader :current_user
 
+  rescue_from ActiveRecord::RecordNotFound, with: :record_not_found
+
   def authorize_request
     header = request.headers["Authorization"]
     token = header.split(" ").last if header.present?
@@ -21,5 +23,11 @@ class ApplicationController < ActionController::API
     if @current_user.nil?
       render json: { error: "User not found" }, status: :unauthorized
     end
+  end
+
+  private
+
+  def record_not_found
+    render json: { error: "Todo not found" }, status: :not_found
   end
 end

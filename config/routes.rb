@@ -4,6 +4,8 @@ Rails.application.routes.draw do
   delete "/logout", to: "authentication#logout"
   get "/me", to: "authentication#me"
   
+  resources :todos, only: [:index, :show, :create, :update, :destroy]
+
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
