@@ -2,10 +2,33 @@ class TodosController < ApplicationController
   before_action :authorize_request
   before_action :set_todo, only: [:show, :update, :destroy]
 
-  # GET /todos
+  # GET /todos?completed=true&q=something&sort=oldest&page=1&per_page=10
   def index
-    todos = current_user.todos.recent
-    render json: { count: todos.size, todos: todos.map { |t| todo_json(t) } }, status: :ok
+    todos = current_user.todos.includes(:items)
+
+    if params[:completed].present?
+      flag = ActiveModel::Type::Boolean.new.cast(params[:completed])
+      todos = flag ? todos.done : todos.pending
+    end
+
+    todos = todos.search(params[:q]) if params[:q].present?
+    todos = params[:sort] == "oldest" ? todos.oldest : todos.recent
+
+    total    = todos.count
+    page     = [params.fetch(:page, 1).to_i, 1].max
+    per_page = params.fetch(:per_page, 10).to_i.clamp(1, 100)
+
+    todos = todos.limit(per_page).offset((page - 1) * per_page)
+
+    render json: {
+      meta: {
+        total_count: total,
+        page: page,
+        per_page: per_page,
+        total_pages: (total / per_page.to_f).ceil
+      },
+      todos: todos.map { |t| todo_json(t) }
+    }, status: :ok
   end
 
   # GET /todos/:id

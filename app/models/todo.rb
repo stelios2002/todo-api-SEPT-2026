@@ -9,4 +9,9 @@ class Todo < ApplicationRecord
   scope :oldest, -> { order(created_at: :asc) }
   scope :done, -> { where(completed: true) }
   scope :pending, -> { where(completed: false) }
+
+  scope :search, ->(term) {
+    pattern = "%#{term.to_s.downcase.strip}%"
+    where("LOWER(title) LIKE :p OR LOWER(description) LIKE :p", p: pattern)
+  }
 end
