@@ -1,10 +1,11 @@
 Rails.application.routes.draw do
   post "/signup", to: "users#create"
-  post "/login", to: "authentication#login"
-  delete "/logout", to: "authentication#logout"
+  post "/auth/login", to: "authentication#login"
+  get "/auth/logout", to: "authentication#logout"
   get "/me", to: "authentication#me"
   
-  resources :todos, only: [:index, :show, :create, :update, :destroy]
+  resources :todos do
+    resources :items, only: [:index, :show, :create, :update, :destroy]
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
