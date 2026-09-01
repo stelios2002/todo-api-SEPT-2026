@@ -1,4 +1,5 @@
 class TodosController < ApplicationController
+  include ItemSerialization
   before_action :authorize_request
   before_action :set_todo, only: [:show, :update, :destroy]
 
@@ -27,13 +28,14 @@ class TodosController < ApplicationController
         per_page: per_page,
         total_pages: (total / per_page.to_f).ceil
       },
-      todos: todos.map { |t| todo_json(t) }
+      todos: todos.map { |t| todo_json(t, include_items: true) }
     }, status: :ok
   end
 
   # GET /todos/:id
   def show
-    render json: { todo: todo_json(@todo) }, status: :ok
+    todo = current_user.todos.includes(:items).find(params[:id])
+    render json: todo_json(todo, include_items: true), status: :ok
   end
 
   # POST /todos
@@ -58,8 +60,16 @@ class TodosController < ApplicationController
 
   # DELETE /todos/:id
   def destroy
-    @todo.destroy
-    render json: { message: "Todo deleted" }, status: :ok
+    todo = @todo
+    deleted_items = todo.items.count
+
+    todo.destroy
+
+    render json: {
+      message: "Todo deleted",
+      id: todo.id,
+      deleted_items: deleted_items
+    }, status: :ok
   end
 
   private
@@ -72,8 +82,8 @@ class TodosController < ApplicationController
     params.permit(:title, :description, :completed)
   end
 
-  def todo_json(todo)
-    {
+  def todo_json(todo, include_items: false)
+    data = {
       id: todo.id,
       title: todo.title,
       description: todo.description,
@@ -82,5 +92,12 @@ class TodosController < ApplicationController
       created_at: todo.created_at,
       updated_at: todo.updated_at
     }
+
+    if include_items
+      sorted = todo.items.sort_by { |i| [i.position || 0, i.created_at] }
+      data[:items] = sorted.map { |i| item_json(i) }
+    end
+
+    data
   end
 end
