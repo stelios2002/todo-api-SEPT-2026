@@ -27,7 +27,8 @@ class ApplicationController < ActionController::API
 
   private
 
-  def record_not_found
-    render json: { error: "Todo not found" }, status: :not_found
+  def record_not_found(exception)
+    model = exception.model || "Record"
+    render json: { error: "#{model} not found" }, status: :not_found
   end
 end

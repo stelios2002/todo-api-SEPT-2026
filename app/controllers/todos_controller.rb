@@ -46,15 +46,18 @@ class TodosController < ApplicationController
   end
 
   def todo_params
-    params.permit(:title, :completed)
+    params.permit(:title, :description, :completed)
   end
 
   def todo_json(todo)
     {
       id: todo.id,
       title: todo.title,
+      description: todo.description,
       completed: todo.completed,
-      created_at: todo.created_at
+      items_count: todo.items.size,
+      created_at: todo.created_at,
+      updated_at: todo.updated_at
     }
   end
 end
