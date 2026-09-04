@@ -32,48 +32,48 @@ RSpec.configure do |config|
             scheme: :bearer,
             bearerFormat: 'JWT'
           }
-        }
-      },
-      schemas: {
-        Item: {
-          type: :object,
-          properties: {
-            id:         { type: :integer, example: 1 },
-            content:    { type: :string,  example: 'Αγόρασε γάλα' },
-            completed:  { type: :boolean, example: false },
-            todo_id:    { type: :integer, example: 1 },
-            created_at: { type: :string, format: 'date-time' },
-            updated_at: { type: :string, format: 'date-time' }
+        },
+        schemas: {
+          Item: {
+            type: :object,
+            properties: {
+              id:         { type: :integer, example: 1 },
+              content:    { type: :string,  example: 'Αγόρασε γάλα' },
+              completed:  { type: :boolean, example: false },
+              todo_id:    { type: :integer, example: 1 },
+              created_at: { type: :string, format: 'date-time' },
+              updated_at: { type: :string, format: 'date-time' }
+            },
+            required: %w[id content completed todo_id]
           },
-          required: %w[id content completed todo_id]
-        },
-        Todo: {
-          type: :object,
-          properties: {
-            id:          { type: :integer, example: 1 },
-            title:       { type: :string,  example: 'Ψώνια' },
-            description: { type: :string,  example: 'Για το Σαββατοκύριακο' },
-            completed:   { type: :boolean, example: false },
-            user_id:     { type: :integer, example: 1 },
-            items:       { type: :array, items: { '$ref' => '#/components/schemas/Item' } },
-            created_at:  { type: :string, format: 'date-time' },
-            updated_at:  { type: :string, format: 'date-time' }
+          Todo: {
+            type: :object,
+            properties: {
+              id:          { type: :integer, example: 1 },
+              title:       { type: :string,  example: 'Ψώνια' },
+              description: { type: :string,  example: 'Για το Σαββατοκύριακο' },
+              completed:   { type: :boolean, example: false },
+              user_id:     { type: :integer, example: 1 },
+              items:       { type: :array, items: { '$ref' => '#/components/schemas/Item' } },
+              created_at:  { type: :string, format: 'date-time' },
+              updated_at:  { type: :string, format: 'date-time' }
+            },
+            required: %w[id title completed user_id]
           },
-          required: %w[id title completed user_id]
-        },
-        Error: {
-          type: :object,
-          properties: {
-            error: { type: :string, example: 'Todo not found' }
-          }
-        },
-        ValidationError: {
-          type: :object,
-          properties: {
-            errors: {
-              type: :array,
-              items: { type: :string },
-              example: ["Title can't be blank"]
+          Error: {
+            type: :object,
+            properties: {
+              error: { type: :string, example: 'Todo not found' }
+            }
+          },
+          ValidationError: {
+            type: :object,
+            properties: {
+              errors: {
+                type: :array,
+                items: { type: :string },
+                example: ["Title can't be blank"]
+              }
             }
           }
         }
