@@ -35,7 +35,7 @@ Demo χρήστες (από τα seeds):
 User  1 ──── n  Todo  1 ──── n  Item
 ```
 
-- `User`: name, email (unique), password_digest
+- `User`: name, email (unique, case-insensitive), password_digest
 - `Todo`: title, description, completed, user_id
 - `Item`: content, completed, position, todo_id
 
@@ -44,14 +44,15 @@ User  1 ──── n  Todo  1 ──── n  Item
 
 ## Authentication
 
-Το `POST /signup` και το `POST /login` επιστρέφουν JWT token με διάρκεια 24 ωρών.
+Το `POST /signup` και το `POST /auth/login` επιστρέφουν JWT token με διάρκεια 24 ωρών.
 Όλα τα προστατευμένα endpoints απαιτούν header:
 
 ```
 Authorization: Bearer <token>
 ```
 
-Ο server δεν κρατάει sessions. Το `DELETE /logout` επιστρέφει μήνυμα επιβεβαίωσης
+
+Ο server δεν κρατάει sessions. Το `GET /auth/logout` επιστρέφει μήνυμα επιβεβαίωσης
 και ο client οφείλει να διαγράψει το token του.
 
 ## Endpoints
@@ -59,14 +60,19 @@ Authorization: Bearer <token>
 | Method | Path | Auth | Περιγραφή |
 |---|---|:--:|---|
 | POST | `/signup` | – | Εγγραφή, επιστρέφει token |
-| POST | `/login` | – | Σύνδεση, επιστρέφει token |
-| DELETE | `/logout` | – | Μήνυμα αποσύνδεσης |
+| POST | `/auth/login` | – | Σύνδεση, επιστρέφει token |
+| GET | `/auth/logout` | – | Μήνυμα αποσύνδεσης |
 | GET | `/me` | ✔ | Στοιχεία συνδεδεμένου χρήστη |
 | GET | `/todos` | ✔ | Λίστα με φίλτρα και σελιδοποίηση |
 | POST | `/todos` | ✔ | Δημιουργία |
 | GET | `/todos/:id` | ✔ | Ένα todo |
-| PATCH | `/todos/:id` | ✔ | Ενημέρωση |
-| DELETE | `/todos/:id` | ✔ | Διαγραφή |
+| PUT | `/todos/:id` | ✔ | Ενημέρωση |
+| DELETE | `/todos/:id` | ✔ | Διαγραφή (και των items του) |
+| GET | `/todos/:todo_id/items` | ✔ | Λίστα items ενός todo |
+| POST | `/todos/:todo_id/items` | ✔ | Δημιουργία item |
+| GET | `/todos/:todo_id/items/:id` | ✔ | Ένα item |
+| PUT | `/todos/:todo_id/items/:id` | ✔ | Ενημέρωση item |
+| DELETE | `/todos/:todo_id/items/:id` | ✔ | Διαγραφή item |
 
 ### Query parameters στο `GET /todos`
 
@@ -106,7 +112,16 @@ curl "http://localhost:3000/todos?completed=false&q=milk" \
   -H "Authorization: Bearer <TOKEN>"
 ```
 
-Απάντηση:
+Δημιουργία item μέσα σε todo:
+
+```bash
+curl -X POST http://localhost:3000/todos/1/items \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <TOKEN>" \
+  -d '{"content":"Αγόρασε γάλα"}'
+```
+
+Απάντηση (`GET /todos`):
 
 ```json
 {
@@ -117,9 +132,12 @@ curl "http://localhost:3000/todos?completed=false&q=milk" \
       "title": "Buy milk",
       "description": "Full fat",
       "completed": false,
-      "items_count": 0,
+      "items_count": 1,
       "created_at": "2026-09-01T10:00:00.000Z",
-      "updated_at": "2026-09-01T10:00:00.000Z"
+      "updated_at": "2026-09-01T10:00:00.000Z",
+      "items": [
+        { "id": 1, "todo_id": 1, "content": "Αγόρασε γάλα", "completed": false, "position": 1, "created_at": "...", "updated_at": "..." }
+      ]
     }
   ]
 }
@@ -130,7 +148,7 @@ curl "http://localhost:3000/todos?completed=false&q=milk" \
 | Code | Πότε |
 |---|---|
 | 200 OK | Επιτυχής ανάγνωση, ενημέρωση, διαγραφή |
-| 201 Created | Επιτυχής δημιουργία (signup, POST /todos) |
+| 201 Created | Επιτυχής δημιουργία (signup, POST /todos, POST /items) |
 | 401 Unauthorized | Λείπει, είναι άκυρο ή έχει λήξει το token / λάθος credentials |
 | 404 Not Found | Το resource δεν υπάρχει ή δεν ανήκει στον χρήστη |
 | 422 Unprocessable Entity | Απέτυχαν τα validations |

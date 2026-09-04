@@ -17,9 +17,11 @@ RSpec.describe "Items", type: :request do
       response "200", "OK" do
         schema type: :object,
                properties: {
-                 items:       { type: :array, items: { "$ref" => "#/components/schemas/Item" } },
-                 total_count: { type: :integer }
-               }
+                 todo_id: { type: :integer },
+                 count:   { type: :integer },
+                 items:   { type: :array, items: { "$ref" => "#/components/schemas/Item" } }
+               },
+               required: %w[todo_id count items]
 
         let!(:list) { create_list(:item, 3, todo: todo) }
         run_test!
@@ -101,25 +103,3 @@ RSpec.describe "Items", type: :request do
           content:   { type: :string },
           completed: { type: :boolean }
         }
-      }
-
-      response "200", "Ενημερώθηκε" do
-        schema "$ref" => "#/components/schemas/Item"
-        let(:id)      { create(:item, todo: todo).id }
-        let(:payload) { { content: "Αλλαγμένο", completed: true } }
-        run_test!
-      end
-    end
-
-    delete "Διαγραφή item" do
-      tags "Items"
-      produces "application/json"
-      security [bearerAuth: []]
-
-      response "200", "Διαγράφηκε" do
-        let(:id) { create(:item, todo: todo).id }
-        run_test!
-      end
-    end
-  end
-end

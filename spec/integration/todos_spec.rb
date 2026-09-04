@@ -13,9 +13,18 @@ RSpec.describe "Todos", type: :request do
       response "200", "OK" do
         schema type: :object,
                properties: {
-                 todos:       { type: :array, items: { "$ref" => "#/components/schemas/Todo" } },
-                 total_count: { type: :integer }
-               }
+                 meta: {
+                   type: :object,
+                   properties: {
+                     total_count: { type: :integer },
+                     page:        { type: :integer },
+                     per_page:    { type: :integer },
+                     total_pages: { type: :integer }
+                   }
+                 },
+                 todos: { type: :array, items: { "$ref" => "#/components/schemas/Todo" } }
+               },
+               required: %w[meta todos]
 
         let!(:todos) { create_list(:todo, 3, user: user) }
         run_test!
@@ -44,7 +53,13 @@ RSpec.describe "Todos", type: :request do
       }
 
       response "201", "Δημιουργήθηκε" do
-        schema "$ref" => "#/components/schemas/Todo"
+        schema type: :object,
+               properties: {
+                 message: { type: :string },
+                 todo:    { "$ref" => "#/components/schemas/Todo" }
+               },
+               required: %w[message todo]
+
         let(:payload) { { title: "Νέο todo", description: "Περιγραφή" } }
         run_test!
       end
@@ -94,7 +109,13 @@ RSpec.describe "Todos", type: :request do
       }
 
       response "200", "Ενημερώθηκε" do
-        schema "$ref" => "#/components/schemas/Todo"
+        schema type: :object,
+               properties: {
+                 message: { type: :string },
+                 todo:    { "$ref" => "#/components/schemas/Todo" }
+               },
+               required: %w[message todo]
+
         let(:id)      { create(:todo, user: user).id }
         let(:payload) { { title: "Ενημερωμένο", completed: true } }
         run_test!
