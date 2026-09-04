@@ -55,9 +55,9 @@ components:
         completed:
           type: boolean
           example: false
-        user_id:
+        items_count:
           type: integer
-          example: 1
+          example: 0
         items:
           type: array
           items:
@@ -72,7 +72,7 @@ components:
       - id
       - title
       - completed
-      - user_id
+      - items_count
     Error:
       type: object
       properties:
@@ -191,12 +191,18 @@ paths:
               schema:
                 type: object
                 properties:
+                  todo_id:
+                    type: integer
+                  count:
+                    type: integer
                   items:
                     type: array
                     items:
                       "$ref": "#/components/schemas/Item"
-                  total_count:
-                    type: integer
+                required:
+                - todo_id
+                - count
+                - items
         '401':
           description: Χωρίς token
           content:
@@ -322,12 +328,24 @@ paths:
               schema:
                 type: object
                 properties:
+                  meta:
+                    type: object
+                    properties:
+                      total_count:
+                        type: integer
+                      page:
+                        type: integer
+                      per_page:
+                        type: integer
+                      total_pages:
+                        type: integer
                   todos:
                     type: array
                     items:
                       "$ref": "#/components/schemas/Todo"
-                  total_count:
-                    type: integer
+                required:
+                - meta
+                - todos
         '401':
           description: Λείπει ή είναι άκυρο το token
           content:
@@ -347,7 +365,15 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/Todo"
+                type: object
+                properties:
+                  message:
+                    type: string
+                  todo:
+                    "$ref": "#/components/schemas/Todo"
+                required:
+                - message
+                - todo
         '422':
           description: Μη έγκυρο title
           content:
@@ -408,7 +434,15 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/Todo"
+                type: object
+                properties:
+                  message:
+                    type: string
+                  todo:
+                    "$ref": "#/components/schemas/Todo"
+                required:
+                - message
+                - todo
       requestBody:
         content:
           application/json:

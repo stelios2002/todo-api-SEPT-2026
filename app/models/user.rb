@@ -3,7 +3,7 @@ class User < ApplicationRecord
   
   has_many :todos, dependent: :destroy
 
-  before_validation { self.email = email.downcase.strip } #trigger before user saving
+  before_validation { self.email = email.downcase.strip if email.present? } #trigger before user saving
 
   validates :name, presence: true
   validates :email, presence: true, uniqueness: true
