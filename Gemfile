@@ -59,3 +59,10 @@ end
 group :test do
   gem "shoulda-matchers", "~> 6.0"
 end
+
+gem "rswag-api"
+gem "rswag-ui"
+
+group :development, :test do
+  gem "rswag-specs"
+end

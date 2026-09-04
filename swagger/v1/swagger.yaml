@@ -1,0 +1,441 @@
+---
+openapi: 3.0.1
+info:
+  title: Todo API
+  version: v1
+  description: REST API για διαχείριση todos και items με JWT authentication.
+servers:
+- url: http://localhost:3000
+  description: Development server
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+schemas:
+  Item:
+    type: object
+    properties:
+      id:
+        type: integer
+        example: 1
+      content:
+        type: string
+        example: Αγόρασε γάλα
+      completed:
+        type: boolean
+        example: false
+      todo_id:
+        type: integer
+        example: 1
+      created_at:
+        type: string
+        format: date-time
+      updated_at:
+        type: string
+        format: date-time
+    required:
+    - id
+    - content
+    - completed
+    - todo_id
+  Todo:
+    type: object
+    properties:
+      id:
+        type: integer
+        example: 1
+      title:
+        type: string
+        example: Ψώνια
+      description:
+        type: string
+        example: Για το Σαββατοκύριακο
+      completed:
+        type: boolean
+        example: false
+      user_id:
+        type: integer
+        example: 1
+      items:
+        type: array
+        items:
+          "$ref": "#/components/schemas/Item"
+      created_at:
+        type: string
+        format: date-time
+      updated_at:
+        type: string
+        format: date-time
+    required:
+    - id
+    - title
+    - completed
+    - user_id
+  Error:
+    type: object
+    properties:
+      error:
+        type: string
+        example: Todo not found
+  ValidationError:
+    type: object
+    properties:
+      errors:
+        type: array
+        items:
+          type: string
+        example:
+        - Title can't be blank
+paths:
+  "/signup":
+    post:
+      summary: Εγγραφή νέου χρήστη
+      tags:
+      - Authentication
+      parameters: []
+      responses:
+        '201':
+          description: Ο χρήστης δημιουργήθηκε
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  token:
+                    type: string
+        '422':
+          description: Μη έγκυρα δεδομένα
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ValidationError"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Γιώργος Παπαδόπουλος
+                email:
+                  type: string
+                  example: giorgos@example.com
+                password:
+                  type: string
+                  example: password123
+              required:
+              - name
+              - email
+              - password
+  "/auth/login":
+    post:
+      summary: Σύνδεση χρήστη
+      tags:
+      - Authentication
+      parameters: []
+      responses:
+        '200':
+          description: Επιτυχής σύνδεση
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+        '401':
+          description: Λάθος στοιχεία
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: giorgos@example.com
+                password:
+                  type: string
+                  example: password123
+              required:
+              - email
+              - password
+  "/todos/{todo_id}/items":
+    parameters:
+    - name: todo_id
+      in: path
+      description: ID του γονικού todo
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Λίστα items ενός todo
+      tags:
+      - Items
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/Item"
+                  total_count:
+                    type: integer
+        '401':
+          description: Χωρίς token
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '404':
+          description: Το todo ανήκει σε άλλον χρήστη
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+    post:
+      summary: Δημιουργία item
+      tags:
+      - Items
+      security:
+      - bearerAuth: []
+      parameters: []
+      responses:
+        '201':
+          description: Δημιουργήθηκε
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Item"
+        '422':
+          description: Κενό content
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ValidationError"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                  example: Αγόρασε γάλα
+                completed:
+                  type: boolean
+                  example: false
+              required:
+              - content
+  "/todos/{todo_id}/items/{id}":
+    parameters:
+    - name: todo_id
+      in: path
+      required: true
+      schema:
+        type: integer
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Ανάκτηση item
+      tags:
+      - Items
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Item"
+        '404':
+          description: Δεν βρέθηκε
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+    put:
+      summary: Ενημέρωση item
+      tags:
+      - Items
+      security:
+      - bearerAuth: []
+      parameters: []
+      responses:
+        '200':
+          description: Ενημερώθηκε
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Item"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                completed:
+                  type: boolean
+    delete:
+      summary: Διαγραφή item
+      tags:
+      - Items
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Διαγράφηκε
+  "/todos":
+    get:
+      summary: Λίστα todos του συνδεδεμένου χρήστη
+      tags:
+      - Todos
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  todos:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/Todo"
+                  total_count:
+                    type: integer
+        '401':
+          description: Λείπει ή είναι άκυρο το token
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+    post:
+      summary: Δημιουργία todo
+      tags:
+      - Todos
+      security:
+      - bearerAuth: []
+      parameters: []
+      responses:
+        '201':
+          description: Δημιουργήθηκε
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Todo"
+        '422':
+          description: Μη έγκυρο title
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ValidationError"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: Ψώνια
+                description:
+                  type: string
+                  example: Για το Σαββατοκύριακο
+              required:
+              - title
+  "/todos/{id}":
+    parameters:
+    - name: id
+      in: path
+      description: ID του todo
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Ανάκτηση ενός todo
+      tags:
+      - Todos
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Todo"
+        '404':
+          description: Δεν βρέθηκε
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+    put:
+      summary: Ενημέρωση todo
+      tags:
+      - Todos
+      security:
+      - bearerAuth: []
+      parameters: []
+      responses:
+        '200':
+          description: Ενημερώθηκε
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Todo"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                completed:
+                  type: boolean
+    delete:
+      summary: Διαγραφή todo και των items του
+      tags:
+      - Todos
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Διαγράφηκε
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  deleted_items:
+                    type: integer
